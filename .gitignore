@@ -1,0 +1,7 @@
+node_modules/
+docs/
+.cookies.json
+.DS_Store
+.claude/
+CLAUDE.md
+debug_drawio.js

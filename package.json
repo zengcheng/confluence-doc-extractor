@@ -1,0 +1,20 @@
+{
+  "name": "confluence-doc-extractor",
+  "version": "1.0.0",
+  "description": "从 Confluence 知识库递归提取文档并转换为 Markdown",
+  "main": "crawl.js",
+  "bin": {
+    "confluence-doc-extractor": "./crawl.js"
+  },
+  "scripts": {
+    "start": "node crawl.js",
+    "postinstall": "npx playwright install chromium"
+  },
+  "keywords": ["confluence", "markdown", "docs"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}
