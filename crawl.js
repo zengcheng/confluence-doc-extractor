@@ -37,6 +37,14 @@ function parseConfluenceUrl(input) {
     if (pageId) {
       return { baseUrl: origin, pageId };
     }
+
+    // 匹配 /display/SPACE/Title 格式
+    const displayMatch = url.pathname.match(/^\/display\/([^/]+)\/(.+)$/);
+    if (displayMatch) {
+      const spaceKey = decodeURIComponent(displayMatch[1]);
+      const title = decodeURIComponent(displayMatch[2].replace(/\+/g, " "));
+      return { baseUrl: origin, spaceKey, title };
+    }
   } catch (e) {
     // not a valid URL
   }
@@ -836,6 +844,25 @@ function generateIndex(rootTitle, outputBase) {
 }
 
 /**
+ * 通过 spaceKey 和 title 查询 pageId
+ */
+async function resolvePageId(spaceKey, title) {
+  try {
+    const encodedTitle = encodeURIComponent(title);
+    const data = await apiGet(
+      `/rest/api/content?spaceKey=${spaceKey}&title=${encodedTitle}&limit=1`
+    );
+    if (data.results && data.results.length > 0) {
+      return data.results[0].id;
+    }
+    return null;
+  } catch (e) {
+    console.warn(`⚠️ 根据 spaceKey=${spaceKey}, title=${title} 查询 pageId 失败: ${e.message}`);
+    return null;
+  }
+}
+
+/**
  * 通过 API 获取页面标题，验证 pageId 是否有效
  */
 async function fetchPageTitle(pageId) {
@@ -907,7 +934,9 @@ async function handleInput(input) {
   const parsed = parseConfluenceUrl(input);
   if (!parsed) {
     console.log("⚠️ 无法解析输入，请提供完整的 Confluence 页面链接");
-    console.log("   示例: https://wiki.example.com/pages/viewpage.action?pageId=123456\n");
+    console.log("   示例:");
+    console.log("   https://wiki.example.com/pages/viewpage.action?pageId=123456");
+    console.log("   https://wiki.example.com/display/SPACE/Page+Title\n");
     return;
   }
 
@@ -919,8 +948,20 @@ async function handleInput(input) {
     await browserLogin();
   }
 
+  // 如果没有 pageId，通过 spaceKey + title 查询
+  let pageId = parsed.pageId;
+  if (!pageId && parsed.spaceKey && parsed.title) {
+    console.log(`🔍 正在通过空间(${parsed.spaceKey})和标题(${parsed.title})查询 pageId...`);
+    pageId = await resolvePageId(parsed.spaceKey, parsed.title);
+    if (!pageId) {
+      console.log("❌ 未找到对应的页面，请检查链接是否正确\n");
+      return;
+    }
+    console.log(`✅ 找到 pageId: ${pageId}`);
+  }
+
   console.log(`正在获取页面信息...`);
-  await extractPage(parsed.pageId);
+  await extractPage(pageId);
 }
 
 async function main() {

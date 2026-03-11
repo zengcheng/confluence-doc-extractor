@@ -23,14 +23,18 @@ npx git@github.com:zengcheng/confluence-doc-extractor.git
 npx git@github.com:zengcheng/confluence-doc-extractor.git "https://wiki.example.com/pages/viewpage.action?pageId=123456"
 ```
 
-首次运行会自动安装依赖和 Chromium 浏览器。
+> ⚠️ **首次运行说明**：首次运行会自动安装以下依赖，耗时可能较长，请耐心等待：
+> - **playwright** — 浏览器自动化库（用于首次登录获取 cookie）
+> - **Chromium 浏览器** — playwright 需要下载约 150MB 的 Chromium 内核
+>
+> 后续运行无需重复下载。
 
 ## 本地安装
 
 ```bash
 git clone git@github.com:zengcheng/confluence-doc-extractor.git
 cd confluence-doc-extractor
-npm install
+npm install   # 安装依赖，同时会自动下载 Chromium 浏览器
 ```
 
 ## 使用
@@ -46,17 +50,22 @@ node crawl.js
 ### 命令行模式
 
 ```bash
+# 带 pageId 的链接
 node crawl.js "https://wiki.example.com/pages/viewpage.action?pageId=123456"
+
+# display 格式链接（/display/空间/标题）
+node crawl.js "https://wiki.example.com/display/SPACE/Page+Title"
 ```
 
 直接提取指定页面，适合脚本调用。
 
 ### 如何获取页面链接
 
-打开 Confluence 页面，复制浏览器地址栏中的完整链接即可：
+打开 Confluence 页面，复制浏览器地址栏中的完整链接即可，支持两种格式：
 
 ```
 https://wiki.example.com/pages/viewpage.action?pageId=123456
+https://wiki.example.com/display/SPACE/Page+Title
 ```
 
 ## 输出结构
