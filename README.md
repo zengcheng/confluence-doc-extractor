@@ -25,7 +25,7 @@
 确保已安装 Node.js (>=16)：
 
 ```bash
-git clone git@github.com:AcademicDog/confluence-doc-extractor.git
+git clone git@github.com:zengcheng/confluence-doc-extractor.git
 cd confluence-doc-extractor
 npm install
 ```
