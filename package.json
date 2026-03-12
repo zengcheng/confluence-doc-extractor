@@ -1,20 +1,23 @@
 {
-  "name": "confluence-doc-extractor",
-  "version": "1.0.0",
-  "description": "从 Confluence 知识库递归提取文档并转换为 Markdown",
-  "main": "crawl.js",
+  "name": "kb-doc-sync",
+  "version": "2.0.0",
+  "description": "KB（Confluence）知识库双向同步工具：提取文档为 Markdown / 上传 Markdown 到 KB",
+  "main": "cli.js",
   "bin": {
-    "confluence-doc-extractor": "./crawl.js"
+    "kb-doc-sync": "./cli.js"
   },
   "scripts": {
-    "start": "node crawl.js",
+    "start": "node cli.js",
+    "pull": "node cli.js pull",
+    "push": "node cli.js push",
     "postinstall": "npx playwright install chromium"
   },
-  "keywords": ["confluence", "markdown", "docs"],
-  "author": "",
+  "keywords": ["confluence", "markdown", "docs", "sync", "upload", "extract"],
+  "author": "zengcheng",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "marked": "^15.0.0",
     "playwright": "^1.58.2"
   }
 }

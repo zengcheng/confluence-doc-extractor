@@ -3,5 +3,7 @@ docs/
 .cookies.json
 .DS_Store
 .claude/
+.gemini/
 CLAUDE.md
+kb-doc-uploader/
 debug_drawio.js

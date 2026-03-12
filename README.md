@@ -1,84 +1,125 @@
-# Confluence 文档提取工具
+# KB 知识库双向同步工具
 
-从 Confluence 知识库递归提取文档，转换为 Markdown 格式并下载所有附件。支持任意 Confluence 实例。
+从 KB（Confluence）知识库提取文档为 Markdown，或将 Markdown 上传到 KB。支持任意 Confluence 实例。
 
 ## 功能
 
+### Pull（提取）
 - 递归提取指定页面及其所有子页面
 - 页面内容转换为 Markdown 格式（保留标题、表格、列表、代码块等）
+- 自动添加 YAML frontmatter 元数据（pageId、spaceKey、version 等）
 - 下载所有附件（图片放 `images/`，其他附件放 `attachments/`）
-- Markdown 中的图片引用自动替换为本地路径
 - 生成 `INDEX.md` 目录索引
 - Cookie 缓存，登录一次后续自动复用
 
+### Push（上传）
+- Markdown 转换为 Confluence Storage Format
+- 支持从 frontmatter 读取 pageId 自动更新对应页面
+- 代码块自动转为 Confluence code 宏
+- Mermaid 流程图自动渲染为 PNG 上传为附件
+- 目录自动转为 Confluence TOC 宏
+- 支持创建新页面或更新已有页面
+
 ## 快速使用（推荐）
 
-不需要 clone 仓库，确保已安装 Node.js (>=16)，一行命令即可：
+确保已安装 Node.js (>=16)：
 
 ```bash
-# 交互模式
-npx git@github.com:zengcheng/confluence-doc-extractor.git
+# Pull — 提取文档
+npx git@github.com:AcademicDog/confluence-doc-extractor.git pull "https://kb.example.com/pages/viewpage.action?pageId=123456"
 
-# 直接传入页面链接
-npx git@github.com:zengcheng/confluence-doc-extractor.git "https://wiki.example.com/pages/viewpage.action?pageId=123456"
+# Push — 上传文档
+npx git@github.com:AcademicDog/confluence-doc-extractor.git push --parent-page-id 123456 docs/my-doc.md
+
+# 交互模式
+npx git@github.com:AcademicDog/confluence-doc-extractor.git
 ```
 
-> ⚠️ **首次运行说明**：首次运行会自动安装以下依赖，耗时可能较长，请耐心等待：
+> ⚠️ **首次运行说明**：首次运行会自动安装以下依赖：
 > - **playwright** — 浏览器自动化库（用于首次登录获取 cookie）
-> - **Chromium 浏览器** — playwright 需要下载约 150MB 的 Chromium 内核
->
-> 后续运行无需重复下载。
+> - **Chromium 浏览器** — 约 150MB
+> - **marked** — Markdown 转 HTML 库（用于上传功能）
 
 ## 本地安装
 
 ```bash
-git clone git@github.com:zengcheng/confluence-doc-extractor.git
+git clone git@github.com:AcademicDog/confluence-doc-extractor.git
 cd confluence-doc-extractor
-npm install   # 安装依赖，同时会自动下载 Chromium 浏览器
+npm install
 ```
 
 ## 使用
 
-### 交互模式
+### Pull — 提取文档
 
 ```bash
-node crawl.js
+# 命令行模式
+node cli.js pull "https://kb.example.com/pages/viewpage.action?pageId=123456"
+node cli.js pull "https://kb.example.com/display/SPACE/Page+Title"
+
+# 交互模式
+node cli.js
 ```
 
-启动后会提示输入 Confluence 页面链接，首次使用会打开浏览器让你登录。可以连续提取多个页面，输入 `q` 退出。
-
-### 命令行模式
+### Push — 上传文档
 
 ```bash
-# 带 pageId 的链接
-node crawl.js "https://wiki.example.com/pages/viewpage.action?pageId=123456"
+# 上传文件到指定父页面下
+node cli.js push --parent-page-id 540734829 docs/my-doc.md
 
-# display 格式链接（/display/空间/标题）
-node crawl.js "https://wiki.example.com/display/SPACE/Page+Title"
+# 更新已有同名页面
+node cli.js push --parent-page-id 540734829 --update docs/my-doc.md
 ```
 
-直接提取指定页面，适合脚本调用。
+### 认证方式
 
-### 如何获取页面链接
+支持两种认证方式：
 
-打开 Confluence 页面，复制浏览器地址栏中的完整链接即可，支持两种格式：
+1. **Cookie 模式**（默认）：首次运行会打开浏览器让你登录，cookie 自动缓存复用
+2. **Token 模式**：设置 `KB_TOKEN` 环境变量，无需浏览器登录
 
+```bash
+export KB_TOKEN="your-bearer-token"
+node cli.js push --parent-page-id 123456 docs/my-doc.md
 ```
-https://wiki.example.com/pages/viewpage.action?pageId=123456
-https://wiki.example.com/display/SPACE/Page+Title
+
+## 提取后的文档格式
+
+提取的 Markdown 文件顶部包含 YAML frontmatter 元数据：
+
+```markdown
+---
+pageId: "123456"
+spaceKey: "ITKB"
+sourceUrl: "https://kb.cvte.com/pages/viewpage.action?pageId=123456"
+title: "页面标题"
+author: "作者名"
+lastModified: "2022-05-21 11:08:19"
+version: 42
+extractedAt: "2026-03-12 13:50:00"
+---
+
+# 页面标题
+
+正文内容...
 ```
+
+上传时会自动读取 frontmatter 中的 `pageId`，实现精准更新。
 
 ## 输出结构
 
 ```
 docs/
   页面标题/
-    README.md           # 当前页面内容
-    INDEX.md            # 目录索引
-    images/             # 页面中引用的图片
-    attachments/        # 其他附件（draw.io、Excel、PDF 等）
+    页面标题.md       # 当前页面内容（含 frontmatter）
+    INDEX.md          # 目录索引
+    images/           # 图片（按 pageId 分目录）
+      {pageId}/
+        image1.png
+    attachments/      # 其他附件（按 pageId 分目录）
+      {pageId}/
+        file.pdf
     子页面标题/
-      README.md
-      images/
+      子页面标题.md
       ...
 ```
